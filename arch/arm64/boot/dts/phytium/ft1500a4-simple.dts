@@ -1,0 +1,145 @@
+/*
+ * DTS file for Phytium FT-1500A SoC
+ *
+ * Copyright (C) 2015, Phytium Technology Co., Ltd.
+ *
+ * This file is licensed under a dual GPLv2 or BSD license.
+ */
+
+/dts-v1/;
+
+/memreserve/    0x80000000 0x100000;
+/{
+	model = "phytium FT1500A/4";
+	compatible = "phytium,ft-1500a";
+	#address-cells = <0x2>;
+	#size-cells = <0x2>;
+	interrupt-parent = <&gic>;
+	
+	chosen {
+		linux,pci-probe-only; 
+	};
+	
+	cpus {
+		#address-cells = <0x2>;
+		#size-cells = <0x0>;
+
+		 cpu@0 {
+		 device_type = "cpu";
+		 compatible = "arm,armv8";
+		 reg = <0x0 0x000>;
+		 enable-method = "spin-table";
+		 cpu-release-addr = <0x0 0x8007fff0>;
+		 };
+
+		 cpu@1 {
+		 device_type = "cpu";
+		 compatible = "arm,armv8";
+		 reg = <0x0 0x001>;
+		 enable-method = "spin-table";
+		 cpu-release-addr = <0x0 0x8007fff0>;
+		 };
+
+		 cpu@2 {
+		 device_type = "cpu";
+		 compatible = "arm,armv8";
+		 reg = <0x0 0x002>;
+		 enable-method = "spin-table";
+		 cpu-release-addr = <0x0 0x8007fff0>;
+		 };
+
+		 cpu@3 {
+		 device_type = "cpu";
+		 compatible = "arm,armv8";
+		 reg = <0x0 0x003>;
+		 enable-method = "spin-table";
+		 cpu-release-addr = <0x0 0x8007fff0>;
+		 };
+
+	};
+	
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000 0x0 0x80000000>;
+	};
+	
+	gic: interrupt-controller@29800000 {
+		compatible = "arm,gic-v3";
+		#interrupt-cells = <0x3>;
+		#address-cells = <0x2>;
+		#size-cells = <0x2>;
+		ranges;
+		interrupt-controller;
+		reg = <0x0 0x29800000 0x0 0x00010000 
+		       0x0 0x29a00000 0x0 0x00200000 
+		       0x0 0x29c00000 0x0 0x00010000 
+		       0x0 0x29c10000 0x0 0x00010000 
+		       0x0 0x29c20000 0x0 0x00010000>;
+		interrupts = <0x1 0x9 0x4>;
+		
+		its: gic-its@29820000 {
+			compatible = "arm,gic-v3-its";
+			msi-controller;
+			reg = <0x0 0x29820000 0x0 0x00020000>;
+		};
+	};
+
+	timer { /* drivers/clocksource/arm_arch_timer.c */
+		/* CONFIG_ARM_ARCH_TIMER: 
+			select CLKSRC_OF if OF
+			select CLKSRC_ACPI if ACPI
+		*/
+		compatible = "arm,armv8-timer";
+		interrupts = <1 13 8>,
+					 <1 14 8>,
+					 <1 11 8>,
+					 <1 10 8>;
+		clock-frequency = <50000000>;
+	};
+	soc {
+		compatible = "arm,amba-bus", "simple-bus";
+		#address-cells = <0x2>;
+		#size-cells = <0x2>;
+		ranges;
+		
+		uart0: serial@28000000 {
+			compatible = "snps,dw-apb-uart";
+			reg = <0x0 0x28000000 0x0 0x1000>;
+			clock-frequency = <50000000>;
+			interrupts = <0 34 4>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+		};
+		
+		pcie0: pcie@40000000{
+			compatible = "pci-host-ecam-generic";
+			device_type = "pci";
+			#address-cells = <0x3>;
+			#size-cells = <0x2>;
+			#interrupt-cells = <0x1>;
+			dma-coherent;
+			reg = <0x0 0x40000000 0x0 0x10000000>;
+			msi-parent = <&its>;
+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0x0 0x0 0x33 0x4>,
+							<0x0 0x0 0x0 0x2 &gic 0x0 0x0 0x0 0x34 0x4>,
+							<0x0 0x0 0x0 0x3 &gic 0x0 0x0 0x0 0x35 0x4>,
+							<0x0 0x0 0x0 0x4 &gic 0x0 0x0 0x0 0x36 0x4>;
+			ranges = <0x01000000 0x00 0x00000000 0x00 0x50000000 0x00 0x01000000>,
+					 <0x02000000 0x00 0x60000000 0x00 0x60000000 0x00 0x20000000>,
+					 <0x03000000 0x01 0x00000000 0x01 0x00000000 0x01 0x00000000>;
+		};
+
+		pmu {
+			compatible = "arm,cortex-a57-pmu";
+			interrupts = <0x0 0x3c 0x4 
+						  0x0 0x3d 0x4 
+						  0x0 0x3e 0x4 
+						  0x0 0x3f 0x4>;
+		};
+	};
+};
+
+&uart0 {
+	status = "ok";
+};
